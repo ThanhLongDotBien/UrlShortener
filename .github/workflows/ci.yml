@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build-test-and-docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore solution
+        run: dotnet restore UrlShortener.slnx
+
+      - name: Build solution
+        run: dotnet build UrlShortener.slnx --no-restore --configuration Release
+
+      - name: Build API Docker image
+        run: docker build -t urlshortener-api -f UrlShortener.API/Dockerfile .
+
+      - name: Build MVC Docker image
+        run: docker build -t urlshortener-mvc -f UrlShortener.MVC/Dockerfile .
