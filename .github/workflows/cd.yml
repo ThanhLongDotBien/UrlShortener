@@ -1,0 +1,60 @@
+name: CD
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  publish-images:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for API
+        id: meta_api
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/urlshortener-api
+          tags: |
+            type=raw,value=latest
+            type=sha
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: UrlShortener.API/Dockerfile
+          push: true
+          tags: ${{ steps.meta_api.outputs.tags }}
+          labels: ${{ steps.meta_api.outputs.labels }}
+
+      - name: Extract metadata for MVC
+        id: meta_mvc
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/urlshortener-mvc
+          tags: |
+            type=raw,value=latest
+            type=sha
+
+      - name: Build and push MVC image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: UrlShortener.MVC/Dockerfile
+          push: true
+          tags: ${{ steps.meta_mvc.outputs.tags }}
+          labels: ${{ steps.meta_mvc.outputs.labels }}
