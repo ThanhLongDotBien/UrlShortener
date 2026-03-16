@@ -1,0 +1,18 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: UrlShortener.API/Dockerfile
+    container_name: urlshortener-api
+    ports:
+      - "8080:8080"
+
+  mvc:
+    build:
+      context: .
+      dockerfile: UrlShortener.MVC/Dockerfile
+    container_name: urlshortener-mvc
+    ports:
+      - "8081:8080"
+    depends_on:
+      - api

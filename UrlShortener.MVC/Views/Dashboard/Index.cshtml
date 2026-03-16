@@ -1,0 +1,50 @@
+﻿@model List<UrlShortener.Data.Entities.ShortUrl>
+
+<h2>My Short Links</h2>
+
+@if (!Model.Any())
+{
+    <p>No links yet.</p>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Short</th>
+                <th>Original</th>
+                <th>Clicks</th>
+                <th>Created</th>
+                <th>QR</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var link in Model)
+            {
+                <tr>
+                    <td>
+                        <a href="@link.ShortLink" target="_blank">@link.Code</a>
+                    </td>
+                    <td>@link.OriginalUrl</td>
+                    <td>@link.ClickCount</td>
+                    <td>@link.CreatedAt</td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(link.QrCodeImagePath))
+                        {
+                            <img src="https://localhost:7174@link.QrCodeImagePath" width="80" />
+                        }
+                    </td>
+                    <td>
+                        <a asp-controller="Dashboard"
+                           asp-action="Delete"
+                           asp-route-id="@link.Id"
+                           class="btn btn-danger btn-sm">
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

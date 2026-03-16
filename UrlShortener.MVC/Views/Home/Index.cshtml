@@ -1,0 +1,22 @@
+﻿@model UrlShortener.MVC.Models.CreateShortUrlViewModel
+
+<h1>URL Shortener</h1>
+
+<form asp-action="Create" method="post">
+    <input asp-for="OriginalUrl" placeholder="Enter your URL" style="width:300px;" />
+    <button type="submit">Shorten</button>
+</form>
+
+@if (ViewBag.Error != null)
+{
+    <p style="color:red;">@ViewBag.Error</p>
+}
+
+@if (ViewBag.ShortUrl != null)
+{
+    <h2>Your Short URL:</h2>
+    <a href="@ViewBag.ShortUrl" target="_blank">@ViewBag.ShortUrl</a>
+
+    <h2>QR Code</h2>
+    <img src="@ViewBag.QrCodeImagePath" alt="QR Code" width="220" />
+}

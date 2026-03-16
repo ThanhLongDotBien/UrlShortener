@@ -1,0 +1,54 @@
+﻿@model UrlShortener.MVC.Models.AdminDashboardViewModel
+
+<h2>Admin Dashboard</h2>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card p-3">
+            <h5>Total Users</h5>
+            <h3>@Model.TotalUsers</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3">
+            <h5>Total Links</h5>
+            <h3>@Model.TotalLinks</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3">
+            <h5>Total Clicks</h5>
+            <h3>@Model.TotalClicks</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3">
+            <h5>New Users (7 days)</h5>
+            <h3>@Model.NewUsersLast7Days</h3>
+        </div>
+    </div>
+</div>
+
+<h4>Top 10 Links</h4>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Code</th>
+            <th>Original URL</th>
+            <th>Clicks</th>
+            <th>Created</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var link in Model.TopLinks)
+        {
+            <tr>
+                <td>@link.Code</td>
+                <td>@link.OriginalUrl</td>
+                <td>@link.ClickCount</td>
+                <td>@link.CreatedAt</td>
+            </tr>
+        }
+    </tbody>
+</table>

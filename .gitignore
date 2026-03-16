@@ -1,0 +1,15 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Build folders
+**/bin/
+**/obj/
+
+# GitHub / OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.tar

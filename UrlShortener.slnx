@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="UrlShortener.API/UrlShortener.API.csproj" />
+  <Project Path="UrlShortener.Common/UrlShortener.Common.csproj" Id="9e51b3a8-aaa0-4cf2-a45c-a87deb6bb9ed" />
+  <Project Path="UrlShortener.Data/UrlShortener.Data.csproj" Id="a2ad6815-4983-4842-b443-aa7a2dc546cf" />
+  <Project Path="UrlShortener.MVC/UrlShortener.MVC.csproj" />
+  <Project Path="UrlShortener.Services/UrlShortener.Services.csproj" Id="766d0935-f953-4c0e-a429-a8ca678432d7" />
+</Solution>

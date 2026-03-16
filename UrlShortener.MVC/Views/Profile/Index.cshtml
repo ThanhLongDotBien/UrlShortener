@@ -1,0 +1,15 @@
+﻿@model UrlShortener.Data.Entities.AppUser
+
+<h2>User Profile</h2>
+
+<div class="mb-3">
+    <strong>Email:</strong> @Model.Email
+</div>
+
+<div class="mb-3">
+    <strong>Created At:</strong> @Model.CreatedAt
+</div>
+
+<a asp-controller="Profile" asp-action="ChangePassword" class="btn btn-primary">
+    Change Password
+</a>
