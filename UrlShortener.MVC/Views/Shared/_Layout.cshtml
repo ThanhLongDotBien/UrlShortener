@@ -1,6 +1,9 @@
 ﻿@using Microsoft.AspNetCore.Http
+@inject IConfiguration Configuration
 @{
     var user = Context.Session.GetString("user");
+    var adminEmails = Configuration.GetSection("AdminSettings:Emails").Get<string[]>() ?? Array.Empty<string>();
+    var isAdmin = !string.IsNullOrWhiteSpace(user) && adminEmails.Contains(user, StringComparer.OrdinalIgnoreCase);
 }
 
 <!DOCTYPE html>
@@ -8,79 +11,90 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - UrlShortener.MVC</title>
+    <title>@ViewData["Title"] - LinkMaker</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/UrlShortener.MVC.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">UrlShortener.MVC</a>
+    <div class="app-shell">
+        <header>
+            <nav class="navbar navbar-expand-lg app-navbar">
+                <div class="container app-container">
+                    <a class="navbar-brand brand-mark d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
+                        <span class="brand-icon">↗</span>
+                        <span>
+                            <strong>LinkMaker</strong>
+                            <small>Smart URL Shortener</small>
+                        </span>
+                    </a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
-                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                            aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
 
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
+                    <div class="collapse navbar-collapse" id="mainNav">
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0 nav-pills-wrap">
+                            @if (user != null)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link nav-pill" asp-controller="Home" asp-action="Index">Create Link</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link nav-pill" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link nav-pill" asp-controller="Profile" asp-action="Index">Profile</a>
+                                </li>
+                                @if (isAdmin)
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link nav-pill" asp-controller="Admin" asp-action="Index">Admin</a>
+                                    </li>
+                                }
+                            }
+                        </ul>
 
-                        @if (user != null)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Profile" asp-action="Index">Profile</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Admin" asp-action="Index">Admin</a>
-                            </li>
-                        }
-                    </ul>
-
-                    <ul class="navbar-nav">
-                        @if (user == null)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Register">Register</a>
-                            </li>
-                        }
-                        else
-                        {
-                            <li class="nav-item">
-                                <span class="nav-link text-dark">Hello @user</span>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Logout">Logout</a>
-                            </li>
-                        }
-                    </ul>
+                        <ul class="navbar-nav align-items-lg-center gap-lg-2">
+                            @if (user == null)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link nav-pill" asp-controller="Account" asp-action="Login">Login</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="btn btn-primary app-btn-primary px-3" asp-controller="Account" asp-action="Register">Get Started</a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                    <span class="user-chip">@user</span>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="btn btn-outline-secondary app-btn-outline px-3" asp-controller="Account" asp-action="Logout">Logout</a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
                 </div>
+            </nav>
+        </header>
+
+        <main class="main-stage">
+            <div class="container app-container py-4 py-lg-5">
+                @RenderBody()
             </div>
-        </nav>
-    </header>
-
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
         </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - UrlShortener.MVC - <a asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
+        <footer class="app-footer">
+            <div class="container app-container d-flex flex-column flex-md-row justify-content-between gap-2">
+                <span>© 2026 LinkMaker</span>
+                <span>Short links, QR codes, and simple management in one place.</span>
+            </div>
+        </footer>
+    </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

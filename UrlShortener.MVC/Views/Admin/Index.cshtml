@@ -1,54 +1,75 @@
 ﻿@model UrlShortener.MVC.Models.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
 
-<h2>Admin Dashboard</h2>
+<div class="mb-4">
+    <span class="eyebrow">Admin overview</span>
+    <h1 class="section-title h2 mt-3 mb-2">Admin Dashboard</h1>
+    <p class="section-subtitle mb-0">Monitor users, links, and performance from one summary page.</p>
+</div>
 
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card p-3">
-            <h5>Total Users</h5>
-            <h3>@Model.TotalUsers</h3>
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <div class="metric-label">Total Users</div>
+            <div class="metric-value">@Model.TotalUsers</div>
+            <div class="metric-note">Registered accounts</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card p-3">
-            <h5>Total Links</h5>
-            <h3>@Model.TotalLinks</h3>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <div class="metric-label">Total Links</div>
+            <div class="metric-value">@Model.TotalLinks</div>
+            <div class="metric-note">Short links created</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card p-3">
-            <h5>Total Clicks</h5>
-            <h3>@Model.TotalClicks</h3>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <div class="metric-label">Total Clicks</div>
+            <div class="metric-value">@Model.TotalClicks</div>
+            <div class="metric-note">All link visits</div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card p-3">
-            <h5>New Users (7 days)</h5>
-            <h3>@Model.NewUsersLast7Days</h3>
+    <div class="col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <div class="metric-label">New Users (7 days)</div>
+            <div class="metric-value">@Model.NewUsersLast7Days</div>
+            <div class="metric-note">Recent registrations</div>
         </div>
     </div>
 </div>
 
-<h4>Top 10 Links</h4>
+<div class="table-shell">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="h4 mb-1">Top 10 Links</h2>
+            <p class="helper-text mb-0">Sorted by click count.</p>
+        </div>
+        <span class="soft-badge">Performance</span>
+    </div>
 
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Code</th>
-            <th>Original URL</th>
-            <th>Clicks</th>
-            <th>Created</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var link in Model.TopLinks)
-        {
-            <tr>
-                <td>@link.Code</td>
-                <td>@link.OriginalUrl</td>
-                <td>@link.ClickCount</td>
-                <td>@link.CreatedAt</td>
-            </tr>
-        }
-    </tbody>
-</table>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Original URL</th>
+                    <th>Clicks</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var link in Model.TopLinks)
+                {
+                    <tr>
+                        <td><span class="link-code">@link.Code</span></td>
+                        <td><span class="url-snippet" title="@link.OriginalUrl">@link.OriginalUrl</span></td>
+                        <td><span class="stat-badge">@link.ClickCount clicks</span></td>
+                        <td><span class="soft-badge">@link.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

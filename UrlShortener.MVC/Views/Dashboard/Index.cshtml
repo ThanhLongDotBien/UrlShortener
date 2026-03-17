@@ -1,50 +1,81 @@
 ﻿@model List<UrlShortener.Data.Entities.ShortUrl>
+@{
+    ViewData["Title"] = "Dashboard";
+}
 
-<h2>My Short Links</h2>
+<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-4">
+    <div>
+        <span class="eyebrow">Your workspace</span>
+        <h1 class="section-title h2 mt-3 mb-2">My Short Links</h1>
+        <p class="section-subtitle mb-0">Review, open, and remove links you have created.</p>
+    </div>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Create new link</a>
+</div>
 
 @if (!Model.Any())
 {
-    <p>No links yet.</p>
+    <div class="empty-state">
+        <h2 class="h4 mb-2">No links yet</h2>
+        <p class="helper-text mb-4">Create your first short link to start building your library.</p>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Create now</a>
+    </div>
 }
 else
 {
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Short</th>
-                <th>Original</th>
-                <th>Clicks</th>
-                <th>Created</th>
-                <th>QR</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var link in Model)
-            {
-                <tr>
-                    <td>
-                        <a href="@link.ShortLink" target="_blank">@link.Code</a>
-                    </td>
-                    <td>@link.OriginalUrl</td>
-                    <td>@link.ClickCount</td>
-                    <td>@link.CreatedAt</td>
-                    <td>
-                        @if (!string.IsNullOrEmpty(link.QrCodeImagePath))
-                        {
-                            <img src="https://localhost:7174@link.QrCodeImagePath" width="80" />
-                        }
-                    </td>
-                    <td>
-                        <a asp-controller="Dashboard"
-                           asp-action="Delete"
-                           asp-route-id="@link.Id"
-                           class="btn btn-danger btn-sm">
-                            Delete
-                        </a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="table-shell">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Short link</th>
+                        <th>Original URL</th>
+                        <th>Clicks</th>
+                        <th>Created</th>
+                        <th>QR</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var link in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-grid gap-1">
+                                    <a href="@link.ShortLink" target="_blank" class="link-code">@link.Code</a>
+                                    <span class="helper-text small">@link.ShortLink</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="url-snippet" title="@link.OriginalUrl">@link.OriginalUrl</span>
+                            </td>
+                            <td>
+                                <span class="stat-badge">@link.ClickCount clicks</span>
+                            </td>
+                            <td>
+                                <span class="soft-badge">@link.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(link.QrCodeImagePath))
+                                {
+                                    <img src="@($"https://localhost:7174{link.QrCodeImagePath}")" alt="QR code" width="64" class="rounded-3 border" />
+                                }
+                                else
+                                {
+                                    <span class="helper-text small">No QR</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a asp-controller="Dashboard"
+                                   asp-action="Delete"
+                                   asp-route-id="@link.Id"
+                                   class="btn btn-outline-danger btn-sm">
+                                    Delete
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 }

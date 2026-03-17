@@ -1,22 +1,36 @@
 ﻿@model UrlShortener.MVC.Models.RegisterViewModel
-
-<h2>Register</h2>
-
-<form method="post">
-    <div>
-        <label>Email</label>
-        <input asp-for="Email" />
-    </div>
-
-    <div>
-        <label>Password</label>
-        <input asp-for="Password" type="password" />
-    </div>
-
-    <button type="submit">Register</button>
-</form>
-
-@if (ViewBag.Error != null)
-{
-    <p style="color:red">@ViewBag.Error</p>
+@{
+    ViewData["Title"] = "Register";
 }
+
+<div class="auth-wrap">
+    <div class="auth-card">
+        <span class="eyebrow">Create account</span>
+        <h1 class="auth-title h2 mt-3 mb-2">Get started with LinkMaker</h1>
+        <p class="auth-subtitle mb-4">Register once and start creating branded-looking, cleaner links right away.</p>
+
+        <form method="post" class="d-grid gap-3">
+            <div>
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" type="email" placeholder="you@example.com" />
+            </div>
+
+            <div>
+                <label asp-for="Password" class="form-label">Password</label>
+                <input asp-for="Password" class="form-control" type="password" placeholder="At least 8 characters" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create account</button>
+        </form>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert-soft-danger mt-3">@ViewBag.Error</div>
+        }
+
+        <p class="helper-text mt-4 mb-0 text-center">
+            Already have an account?
+            <a asp-controller="Account" asp-action="Login" class="text-decoration-none fw-semibold">Login here</a>
+        </p>
+    </div>
+</div>

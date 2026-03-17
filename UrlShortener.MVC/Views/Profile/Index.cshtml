@@ -1,15 +1,43 @@
 ﻿@model UrlShortener.Data.Entities.AppUser
+@{
+    ViewData["Title"] = "Profile";
+}
 
-<h2>User Profile</h2>
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card-soft h-100">
+            <span class="eyebrow">Account details</span>
+            <h1 class="section-title h2 mt-3 mb-2">User Profile</h1>
+            <p class="section-subtitle mb-4">Basic account information for the current signed-in user.</p>
 
-<div class="mb-3">
-    <strong>Email:</strong> @Model.Email
+            <div class="info-list">
+                <div class="info-item">
+                    <span class="info-label">Email</span>
+                    <span class="info-value">@Model.Email</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Created At</span>
+                    <span class="info-value">@Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">User ID</span>
+                    <span class="info-value">#@Model.Id</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card-soft h-100 d-flex flex-column">
+            <span class="eyebrow">Security</span>
+            <h2 class="section-title h3 mt-3 mb-2">Account actions</h2>
+            <p class="section-subtitle mb-4">Update your password regularly to keep the account safe.</p>
+
+            <div class="mt-auto">
+                <a asp-controller="Profile" asp-action="ChangePassword" class="btn btn-primary w-100">
+                    Change Password
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
-
-<div class="mb-3">
-    <strong>Created At:</strong> @Model.CreatedAt
-</div>
-
-<a asp-controller="Profile" asp-action="ChangePassword" class="btn btn-primary">
-    Change Password
-</a>

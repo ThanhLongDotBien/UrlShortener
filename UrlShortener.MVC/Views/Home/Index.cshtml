@@ -1,22 +1,98 @@
 ﻿@model UrlShortener.MVC.Models.CreateShortUrlViewModel
-
-<h1>URL Shortener</h1>
-
-<form asp-action="Create" method="post">
-    <input asp-for="OriginalUrl" placeholder="Enter your URL" style="width:300px;" />
-    <button type="submit">Shorten</button>
-</form>
-
-@if (ViewBag.Error != null)
-{
-    <p style="color:red;">@ViewBag.Error</p>
+@{
+    ViewData["Title"] = "Create Link";
 }
 
-@if (ViewBag.ShortUrl != null)
-{
-    <h2>Your Short URL:</h2>
-    <a href="@ViewBag.ShortUrl" target="_blank">@ViewBag.ShortUrl</a>
+<div class="page-hero">
+    <div class="row g-4 g-lg-5 align-items-center">
+        <div class="col-lg-7">
+            <span class="eyebrow">Modern URL Management</span>
+            <h1 class="hero-title">Shorten long links into clean, shareable URLs.</h1>
+            <p class="hero-text fs-5 mb-0">
+                Create short links in seconds, generate QR codes instantly, and manage everything from one simple dashboard.
+            </p>
 
-    <h2>QR Code</h2>
-    <img src="@ViewBag.QrCodeImagePath" alt="QR Code" width="220" />
+            <div class="feature-list">
+                <div class="feature-item">
+                    <strong>Fast creation</strong>
+                    <span class="helper-text">Paste a long URL and get a short one immediately.</span>
+                </div>
+                <div class="feature-item">
+                    <strong>QR ready</strong>
+                    <span class="helper-text">Each link comes with a QR code for mobile sharing.</span>
+                </div>
+                <div class="feature-item">
+                    <strong>Easy tracking</strong>
+                    <span class="helper-text">Review all links and monitor click counts later.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card-soft shortener-card">
+                <h2 class="section-title h3 mb-2">Create a short link</h2>
+                <p class="section-subtitle mb-4">Keep it simple, readable, and ready to share.</p>
+
+                <form asp-action="Create" method="post" class="d-grid gap-3" id="shortenForm" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert-soft-danger" style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
+
+                    <div>
+                        <label asp-for="OriginalUrl" class="form-label">Original URL</label>
+                        <input asp-for="OriginalUrl"
+                               class="form-control"
+                               placeholder="https://example.com/very-long-link"
+                               id="originalUrlInput" />
+                        <span asp-validation-for="OriginalUrl" class="text-danger small mt-1 d-block"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="shortenBtn" disabled>Shorten URL</button>
+                </form>
+
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert-soft-danger mt-3">@ViewBag.Error</div>
+                }
+
+                @if (ViewBag.ShortUrl != null)
+                {
+                    <div class="result-box">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="h5 mb-0">Your short URL is ready</h3>
+                            <span class="soft-badge">Generated</span>
+                        </div>
+
+                        <div class="result-link mb-3">
+                            <a href="@ViewBag.ShortUrl" target="_blank" id="shortUrlText">@ViewBag.ShortUrl</a>
+                            <button type="button" class="btn btn-outline-secondary btn-sm copy-btn" data-copy="@ViewBag.ShortUrl">
+                                Copy
+                            </button>
+                        </div>
+
+                        <div class="qr-preview">
+                            <img src="@ViewBag.QrCodeImagePath" alt="QR Code" />
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const input = document.getElementById("originalUrlInput");
+            const button = document.getElementById("shortenBtn");
+
+            function toggleButton() {
+                const value = input.value.trim();
+                button.disabled = value.length === 0;
+            }
+
+            input.addEventListener("input", toggleButton);
+            toggleButton();
+        });
+    </script>
 }
