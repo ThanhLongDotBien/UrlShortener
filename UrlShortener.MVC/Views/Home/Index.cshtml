@@ -34,8 +34,6 @@
                 <p class="section-subtitle mb-4">Keep it simple, readable, and ready to share.</p>
 
                 <form asp-action="Create" method="post" class="d-grid gap-3" id="shortenForm" novalidate>
-                    <div asp-validation-summary="ModelOnly" class="alert-soft-danger" style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
-
                     <div>
                         <label asp-for="OriginalUrl" class="form-label">Original URL</label>
                         <input asp-for="OriginalUrl"
