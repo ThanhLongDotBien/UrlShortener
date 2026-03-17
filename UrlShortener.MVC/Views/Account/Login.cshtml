@@ -1,4 +1,4 @@
-﻿@model UrlShortener.MVC.Models.LoginViewModel
+@model UrlShortener.MVC.Models.LoginViewModel
 @{
     ViewData["Title"] = "Login";
 }
@@ -13,11 +13,13 @@
             <div>
                 <label asp-for="Email" class="form-label">Email</label>
                 <input asp-for="Email" class="form-control" type="email" placeholder="you@example.com" />
+                <span asp-validation-for="Email" class="text-danger small mt-1 d-block"></span>
             </div>
 
             <div>
                 <label asp-for="Password" class="form-label">Password</label>
                 <input asp-for="Password" class="form-control" type="password" placeholder="Enter your password" />
+                <span asp-validation-for="Password" class="text-danger small mt-1 d-block"></span>
             </div>
 
             <button type="submit" class="btn btn-primary">Login</button>
@@ -29,8 +31,12 @@
         }
 
         <p class="helper-text mt-4 mb-0 text-center">
-            Don’t have an account?
+            Don�t have an account?
             <a asp-controller="Account" asp-action="Register" class="text-decoration-none fw-semibold">Create one</a>
         </p>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

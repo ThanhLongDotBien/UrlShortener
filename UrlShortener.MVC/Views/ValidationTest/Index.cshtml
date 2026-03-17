@@ -1,0 +1,229 @@
+@{
+    ViewData["Title"] = "Validation Test";
+}
+
+<div class="container my-5">
+    <h1 class="mb-4">🧪 Validation Testing Dashboard</h1>
+    <p class="lead">Kiểm tra các tính năng validation đã implement trong project</p>
+
+    <div class="row g-4">
+        <!-- Test 1: DataAnnotation -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">✅ 1. DataAnnotation Validation</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Models có DataAnnotation:</h6>
+                    <ul>
+                        <li><code>CreateShortUrlViewModel</code>
+                            <ul>
+                                <li>[Required], [Url]</li>
+                            </ul>
+                        </li>
+                        <li><code>LoginViewModel</code>
+                            <ul>
+                                <li>[Required], [EmailAddress]</li>
+                            </ul>
+                        </li>
+                        <li><code>RegisterViewModel</code>
+                            <ul>
+                                <li>[Required], [StringLength], [Compare], [RegularExpression]</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <div class="alert alert-success">
+                        <strong>Test:</strong> Thử submit form trống ở trang Login/Register/Home
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 2: FluentValidation -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">✅ 2. FluentValidation</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Validators đã tạo:</h6>
+                    <ul>
+                        <li><code>LoginViewModelValidator</code></li>
+                        <li><code>RegisterViewModelValidator</code></li>
+                        <li><code>CreateShortUrlViewModelValidator</code></li>
+                    </ul>
+                    <h6 class="mt-3">Package installed:</h6>
+                    <ul>
+                        <li>FluentValidation.AspNetCore v11.3.1</li>
+                    </ul>
+                    <div class="alert alert-success">
+                        <strong>Test:</strong> Nhập password ngắn hơn 8 ký tự ở trang Register
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 3: Fluent API -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">✅ 3. Fluent API (EF Core)</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Configurations đã tạo:</h6>
+                    <ul>
+                        <li><code>ShortUrlConfiguration</code>
+                            <ul>
+                                <li>OriginalUrl: Required, MaxLength(2048)</li>
+                                <li>Code: Required, MaxLength(10), Unique</li>
+                            </ul>
+                        </li>
+                        <li><code>AppUserConfiguration</code>
+                            <ul>
+                                <li>Email: Required, MaxLength(256), Unique</li>
+                                <li>UserName: Required, MaxLength(256)</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <div class="alert alert-success">
+                        <strong>Test:</strong> Xem database schema trong SQL Server Management Studio
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 4: Client-side Validation -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">🔄 4. Client-side Validation</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Validation Scripts:</h6>
+                    <ul>
+                        <li>_ValidationScriptsPartial added to views</li>
+                        <li>jQuery Validation</li>
+                        <li>jQuery Validation Unobtrusive</li>
+                    </ul>
+                    <div class="alert alert-warning">
+                        <strong>Test:</strong> Mở DevTools (F12) và xem validation errors xuất hiện TRƯỚC khi submit form
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Test Forms -->
+    <div class="card mt-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">🎯 Quick Test: Thử ngay các scenarios</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <h6>Test DataAnnotation:</h6>
+                    <ol>
+                        <li>Vào trang <a asp-controller="Account" asp-action="Login">Login</a></li>
+                        <li>Để trống email và password</li>
+                        <li>Click Login</li>
+                        <li>✅ Phải thấy "Email is required" và "Password is required"</li>
+                    </ol>
+                </div>
+                <div class="col-md-4">
+                    <h6>Test FluentValidation:</h6>
+                    <ol>
+                        <li>Vào trang <a asp-controller="Account" asp-action="Register">Register</a></li>
+                        <li>Nhập password: "abc123"</li>
+                        <li>Click Create account</li>
+                        <li>✅ Phải thấy validation lỗi về uppercase letter</li>
+                    </ol>
+                </div>
+                <div class="col-md-4">
+                    <h6>Test Custom Validation:</h6>
+                    <ol>
+                        <li>Vào trang <a asp-controller="Home" asp-action="Index">Home</a></li>
+                        <li>Nhập URL: "notavalidurl"</li>
+                        <li>Click Shorten URL</li>
+                        <li>✅ Phải thấy "URL must start with http:// or https://"</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Test SQL -->
+    <div class="card mt-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">💾 Kiểm tra Database Constraints</h5>
+        </div>
+        <div class="card-body">
+            <p>Mở SQL Server Management Studio và chạy các lệnh sau:</p>
+
+            <h6>1. Kiểm tra ShortUrls table:</h6>
+            <pre class="bg-light p-3"><code>-- Xem constraints của ShortUrls table
+SELECT 
+    COLUMN_NAME, 
+    DATA_TYPE, 
+    CHARACTER_MAXIMUM_LENGTH, 
+    IS_NULLABLE
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'ShortUrls'
+
+-- Xem indexes
+EXEC sp_helpindex 'ShortUrls'</code></pre>
+
+            <h6>2. Kiểm tra AspNetUsers table:</h6>
+            <pre class="bg-light p-3"><code>-- Xem constraints của AspNetUsers table
+SELECT 
+    COLUMN_NAME, 
+    DATA_TYPE, 
+    CHARACTER_MAXIMUM_LENGTH, 
+    IS_NULLABLE
+FROM INFORMATION_SCHEMA.COLUMNS 
+WHERE TABLE_NAME = 'AspNetUsers'
+
+-- Xem indexes
+EXEC sp_helpindex 'AspNetUsers'</code></pre>
+        </div>
+    </div>
+
+    <!-- Expected Results -->
+    <div class="card mt-4 border-success">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">✅ Kết quả mong đợi</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>ShortUrls Table nên có:</h6>
+                    <ul>
+                        <li>✅ OriginalUrl: nvarchar(2048), NOT NULL</li>
+                        <li>✅ Code: nvarchar(10), NOT NULL</li>
+                        <li>✅ UNIQUE index trên Code</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>AspNetUsers Table nên có:</h6>
+                    <ul>
+                        <li>✅ Email: nvarchar(256), NOT NULL</li>
+                        <li>✅ UserName: nvarchar(256), NOT NULL</li>
+                        <li>✅ UNIQUE index trên Email</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    pre {
+        border-radius: 5px;
+        border: 1px solid #ddd;
+    }
+    code {
+        color: #d63384;
+    }
+</style>
