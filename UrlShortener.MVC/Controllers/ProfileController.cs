@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using UrlShortener.Data;
 using UrlShortener.Data.Entities;
 
 namespace UrlShortener.MVC.Controllers
 {
+    [Authorize]
     public class ProfileController : Controller
     {
         private readonly AppDbContext _context;
@@ -17,13 +20,13 @@ namespace UrlShortener.MVC.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var email = HttpContext.Session.GetString("user");
-            if (string.IsNullOrEmpty(email))
-                return RedirectToAction("Login", "Account");
+            var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userIdValue) || !int.TryParse(userIdValue, out var userId))
+                return Challenge();
 
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == email);
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
             if (user == null)
-                return RedirectToAction("Login", "Account");
+                return Challenge();
 
             return View(user);
         }
@@ -31,27 +34,24 @@ namespace UrlShortener.MVC.Controllers
         [HttpGet]
         public IActionResult ChangePassword()
         {
-            var email = HttpContext.Session.GetString("user");
-            if (string.IsNullOrEmpty(email))
-                return RedirectToAction("Login", "Account");
-
             return View();
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(string currentPassword, string newPassword)
         {
-            var email = HttpContext.Session.GetString("user");
-            if (string.IsNullOrEmpty(email))
-                return RedirectToAction("Login", "Account");
+            var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userIdValue) || !int.TryParse(userIdValue, out var userId))
+                return Challenge();
 
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == email);
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
             if (user == null)
-                return RedirectToAction("Login", "Account");
+                return Challenge();
 
             var hasher = new PasswordHasher<AppUser>();
 
-            var currentCheck = hasher.VerifyHashedPassword(user, user.PasswordHash ?? "", currentPassword);
+            var currentCheck = hasher.VerifyHashedPassword(user, user.PasswordHash ?? string.Empty, currentPassword);
             if (currentCheck == PasswordVerificationResult.Failed)
             {
                 ViewBag.Error = "Current password is incorrect.";
@@ -64,9 +64,9 @@ namespace UrlShortener.MVC.Controllers
                 .Take(5)
                 .ToListAsync();
 
-            foreach (var h in histories)
+            foreach (var history in histories)
             {
-                var reused = hasher.VerifyHashedPassword(user, h.PasswordHash, newPassword);
+                var reused = hasher.VerifyHashedPassword(user, history.PasswordHash, newPassword);
                 if (reused == PasswordVerificationResult.Success)
                 {
                     ViewBag.Error = "Cannot reuse the last 5 passwords.";
@@ -85,7 +85,7 @@ namespace UrlShortener.MVC.Controllers
             });
 
             await _context.SaveChangesAsync();
-
+            TempData["Success"] = "Password updated successfully.";
             return RedirectToAction(nameof(Index));
         }
     }

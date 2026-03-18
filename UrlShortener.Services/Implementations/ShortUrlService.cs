@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
 using QRCoder;
+using System.Text.Json;
 using UrlShortener.Common.Configurations;
 using UrlShortener.Common.DTOs;
 using UrlShortener.Data;
@@ -13,14 +15,18 @@ namespace UrlShortener.Services.Implementations
     {
         private readonly AppDbContext _context;
         private readonly AppSettings _appSettings;
+        private readonly IDistributedCache _cache;
         private static readonly Random _random = new();
+        private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(30);
 
         public ShortUrlService(
             AppDbContext context,
-            IOptions<AppSettings> appSettings)
+            IOptions<AppSettings> appSettings,
+            IDistributedCache cache)
         {
             _context = context;
             _appSettings = appSettings.Value;
+            _cache = cache;
         }
 
         public async Task<ShortUrlResponseDto> CreateShortUrlAsync(CreateShortUrlRequestDto request)
@@ -66,60 +72,110 @@ namespace UrlShortener.Services.Implementations
             _context.ShortUrls.Add(entity);
             await _context.SaveChangesAsync();
 
-            return new ShortUrlResponseDto
-            {
-                Id = entity.Id,
-                OriginalUrl = entity.OriginalUrl,
-                Code = entity.Code,
-                ShortLink = entity.ShortLink,
-                QrCodeImagePath = entity.QrCodeImagePath,
-                CreatedAt = entity.CreatedAt,
-                ClickCount = entity.ClickCount,
-                UserId = entity.UserId
-            };
+            var response = MapToDto(entity);
+            await CacheShortUrlAsync(response);
+            return response;
         }
 
         public async Task<ShortUrlResponseDto?> GetByCodeAsync(string code)
         {
-            var entity = await _context.ShortUrls.FirstOrDefaultAsync(x => x.Code == code);
+            var cacheKey = GetShortUrlCacheKey(code);
+            var cachedJson = await _cache.GetStringAsync(cacheKey);
+            if (!string.IsNullOrWhiteSpace(cachedJson))
+            {
+                return JsonSerializer.Deserialize<ShortUrlResponseDto>(cachedJson);
+            }
 
+            var entity = await _context.ShortUrls.FirstOrDefaultAsync(x => x.Code == code);
             if (entity == null)
                 return null;
 
-            return new ShortUrlResponseDto
-            {
-                Id = entity.Id,
-                OriginalUrl = entity.OriginalUrl,
-                Code = entity.Code,
-                ShortLink = entity.ShortLink,
-                QrCodeImagePath = entity.QrCodeImagePath,
-                CreatedAt = entity.CreatedAt,
-                ClickCount = entity.ClickCount,
-                UserId = entity.UserId
-            };
+            var dto = MapToDto(entity);
+            await CacheShortUrlAsync(dto);
+            return dto;
         }
 
         public async Task<string?> GetOriginalUrlAsync(string code)
         {
-            var entity = await _context.ShortUrls.FirstOrDefaultAsync(x => x.Code == code);
+            var originalKey = GetOriginalUrlCacheKey(code);
+            var dtoKey = GetShortUrlCacheKey(code);
+            var cachedOriginal = await _cache.GetStringAsync(originalKey);
 
+            if (!string.IsNullOrWhiteSpace(cachedOriginal))
+            {
+                var rows = await _context.ShortUrls
+                    .Where(x => x.Code == code)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(x => x.ClickCount, x => x.ClickCount + 1));
+
+                if (rows == 0)
+                {
+                    await _cache.RemoveAsync(originalKey);
+                    await _cache.RemoveAsync(dtoKey);
+                    return null;
+                }
+
+                var cachedDtoJson = await _cache.GetStringAsync(dtoKey);
+                if (!string.IsNullOrWhiteSpace(cachedDtoJson))
+                {
+                    var cachedDto = JsonSerializer.Deserialize<ShortUrlResponseDto>(cachedDtoJson);
+                    if (cachedDto != null)
+                    {
+                        cachedDto.ClickCount++;
+                        await _cache.SetStringAsync(dtoKey, JsonSerializer.Serialize(cachedDto), BuildCacheOptions());
+                    }
+                }
+
+                return cachedOriginal;
+            }
+
+            var entity = await _context.ShortUrls.FirstOrDefaultAsync(x => x.Code == code);
             if (entity == null)
                 return null;
 
             entity.ClickCount++;
             await _context.SaveChangesAsync();
 
+            var dto = MapToDto(entity);
+            await CacheShortUrlAsync(dto);
             return entity.OriginalUrl;
         }
+
+        private async Task CacheShortUrlAsync(ShortUrlResponseDto dto)
+        {
+            var json = JsonSerializer.Serialize(dto);
+            await _cache.SetStringAsync(GetShortUrlCacheKey(dto.Code), json, BuildCacheOptions());
+            await _cache.SetStringAsync(GetOriginalUrlCacheKey(dto.Code), dto.OriginalUrl, BuildCacheOptions());
+        }
+
+        private static string GetShortUrlCacheKey(string code) => $"shorturl:dto:{code}";
+        private static string GetOriginalUrlCacheKey(string code) => $"shorturl:original:{code}";
+
+        private static DistributedCacheEntryOptions BuildCacheOptions() => new()
+        {
+            AbsoluteExpirationRelativeToNow = CacheDuration
+        };
+
+        private static ShortUrlResponseDto MapToDto(ShortUrl entity) => new()
+        {
+            Id = entity.Id,
+            OriginalUrl = entity.OriginalUrl,
+            Code = entity.Code,
+            ShortLink = entity.ShortLink,
+            QrCodeImagePath = entity.QrCodeImagePath,
+            CreatedAt = entity.CreatedAt,
+            ClickCount = entity.ClickCount,
+            UserId = entity.UserId
+        };
 
         private string GenerateCodeFromUrl(string url)
         {
             var uri = new Uri(url);
             var host = uri.Host.Replace("www.", "");
-            var name = host.Split('.')[0].ToLower();
+            var name = host.Split('.')[0].ToLowerInvariant();
 
             if (name.Length > 8)
-                name = name.Substring(0, 8);
+                name = name[..8];
 
             var suffix = _random.Next(10, 100);
             return $"{name}{suffix}";

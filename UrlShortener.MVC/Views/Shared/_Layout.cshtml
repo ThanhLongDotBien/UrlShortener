@@ -1,9 +1,9 @@
-﻿@using Microsoft.AspNetCore.Http
+﻿@using System.Security.Claims
 @inject IConfiguration Configuration
 @{
-    var user = Context.Session.GetString("user");
+    var userEmail = User.FindFirstValue(ClaimTypes.Email) ?? User.Identity?.Name;
     var adminEmails = Configuration.GetSection("AdminSettings:Emails").Get<string[]>() ?? Array.Empty<string>();
-    var isAdmin = !string.IsNullOrWhiteSpace(user) && adminEmails.Contains(user, StringComparer.OrdinalIgnoreCase);
+    var isAdmin = !string.IsNullOrWhiteSpace(userEmail) && adminEmails.Contains(userEmail, StringComparer.OrdinalIgnoreCase);
 }
 
 <!DOCTYPE html>
@@ -37,7 +37,7 @@
 
                     <div class="collapse navbar-collapse" id="mainNav">
                         <ul class="navbar-nav me-auto mb-2 mb-lg-0 nav-pills-wrap">
-                            @if (user != null)
+                            @if (User.Identity?.IsAuthenticated == true)
                             {
                                 <li class="nav-item">
                                     <a class="nav-link nav-pill" asp-controller="Home" asp-action="Index">Create Link</a>
@@ -58,7 +58,7 @@
                         </ul>
 
                         <ul class="navbar-nav align-items-lg-center gap-lg-2">
-                            @if (user == null)
+                            @if (User.Identity?.IsAuthenticated != true)
                             {
                                 <li class="nav-item">
                                     <a class="nav-link nav-pill" asp-controller="Account" asp-action="Login">Login</a>
@@ -70,10 +70,13 @@
                             else
                             {
                                 <li class="nav-item">
-                                    <span class="user-chip">@user</span>
+                                    <span class="user-chip">@userEmail</span>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="btn btn-outline-secondary app-btn-outline px-3" asp-controller="Account" asp-action="Logout">Logout</a>
+                                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline-secondary app-btn-outline px-3">Logout</button>
+                                    </form>
                                 </li>
                             }
                         </ul>

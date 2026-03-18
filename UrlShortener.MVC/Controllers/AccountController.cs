@@ -1,80 +1,106 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Net.Http.Json;
-using UrlShortener.Common.DTOs;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using UrlShortener.Data.Entities;
 using UrlShortener.MVC.Models;
 
 namespace UrlShortener.MVC.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly HttpClient _httpClient;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly SignInManager<AppUser> _signInManager;
 
-        public AccountController(IHttpClientFactory factory)
+        public AccountController(
+            UserManager<AppUser> userManager,
+            SignInManager<AppUser> signInManager)
         {
-            _httpClient = factory.CreateClient("api");
+            _userManager = userManager;
+            _signInManager = signInManager;
         }
 
         [HttpGet]
         public IActionResult Login()
         {
+            if (User.Identity?.IsAuthenticated == true)
+                return RedirectToAction("Index", "Home");
+
             return View();
         }
 
         [HttpGet]
         public IActionResult Register()
         {
+            if (User.Identity?.IsAuthenticated == true)
+                return RedirectToAction("Index", "Home");
+
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
             return View();
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (!ModelState.IsValid)
                 return View(model);
 
-            var dto = new RegisterRequestDto
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null)
+            {
+                ViewBag.Error = "Email is already registered.";
+                return View(model);
+            }
+
+            var user = new AppUser
             {
                 Email = model.Email,
-                Password = model.Password
+                UserName = model.Email
             };
 
-            var response = await _httpClient.PostAsJsonAsync("api/auth/register", dto);
+            var result = await _userManager.CreateAsync(user, model.Password);
+            if (!result.Succeeded)
+            {
+                ViewBag.Error = string.Join(" ", result.Errors.Select(x => x.Description));
+                return View(model);
+            }
 
-            if (response.IsSuccessStatusCode)
-                return RedirectToAction("Login");
-
-            ViewBag.Error = await response.Content.ReadAsStringAsync();
-            return View(model);
+            return RedirectToAction(nameof(Login));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (!ModelState.IsValid)
                 return View(model);
 
-            var dto = new LoginRequestDto
-            {
-                Email = model.Email,
-                Password = model.Password
-            };
+            var result = await _signInManager.PasswordSignInAsync(
+                userName: model.Email,
+                password: model.Password,
+                isPersistent: true,
+                lockoutOnFailure: false);
 
-            var response = await _httpClient.PostAsJsonAsync("api/auth/login", dto);
-
-            if (!response.IsSuccessStatusCode)
+            if (!result.Succeeded)
             {
                 ViewBag.Error = "Invalid email or password.";
                 return View(model);
             }
 
-            HttpContext.Session.SetString("user", model.Email);
             return RedirectToAction("Index", "Home");
         }
 
-        public IActionResult Logout()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
         {
-            HttpContext.Session.Clear();
-            return RedirectToAction("Login");
+            await _signInManager.SignOutAsync();
+            return RedirectToAction(nameof(Login));
         }
+
     }
 }

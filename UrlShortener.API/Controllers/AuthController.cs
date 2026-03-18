@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Mvc;
 using UrlShortener.Common.DTOs;
 using UrlShortener.Services.Interfaces;
 
@@ -16,6 +17,7 @@ namespace UrlShortener.API.Controllers
         }
 
         [HttpPost("register")]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> Register(RegisterRequestDto request)
         {
             var result = await _authService.Register(request);
@@ -27,6 +29,7 @@ namespace UrlShortener.API.Controllers
         }
 
         [HttpPost("login")]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> Login(LoginRequestDto request)
         {
             var result = await _authService.Login(request);

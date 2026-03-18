@@ -1,38 +1,36 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using UrlShortener.Common.DTOs;
-using UrlShortener.Data;
 using UrlShortener.MVC.Models;
 using UrlShortener.MVC.Services;
 
 namespace UrlShortener.MVC.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly ApiService _apiService;
-        private readonly AppDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public HomeController(ApiService apiService, AppDbContext context)
+        public HomeController(ApiService apiService, IConfiguration configuration)
         {
             _apiService = apiService;
-            _context = context;
+            _configuration = configuration;
         }
 
         public IActionResult Index()
         {
-            if (HttpContext.Session.GetString("user") == null)
-                return RedirectToAction("Login", "Account");
-
             return View(new CreateShortUrlViewModel());
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateShortUrlViewModel model)
         {
-            var email = HttpContext.Session.GetString("user");
-
-            if (string.IsNullOrEmpty(email))
-                return RedirectToAction("Login", "Account");
+            var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userIdValue) || !int.TryParse(userIdValue, out var userId))
+                return Challenge();
 
             if (string.IsNullOrWhiteSpace(model.OriginalUrl))
             {
@@ -52,22 +50,23 @@ namespace UrlShortener.MVC.Controllers
             if (!ModelState.IsValid)
                 return View("Index", model);
 
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == email);
-            if (user == null)
-                return RedirectToAction("Login", "Account");
-
             try
             {
                 var request = new CreateShortUrlRequestDto
                 {
                     OriginalUrl = model.OriginalUrl,
-                    UserId = user.Id
+                    UserId = userId
                 };
 
                 var result = await _apiService.CreateShortUrl(request);
+                var apiPublicBaseUrl = ((_configuration["ApiSettings:PublicBaseUrl"]
+                    ?? _configuration["ApiSettings:InternalBaseUrl"]
+                    ?? "https://localhost:7174")).TrimEnd('/');
 
                 ViewBag.ShortUrl = result.ShortLink;
-                ViewBag.QrCodeImagePath = $"https://localhost:7174{result.QrCodeImagePath}";
+                ViewBag.QrCodeImagePath = string.IsNullOrWhiteSpace(result.QrCodeImagePath)
+                    ? null
+                    : $"{apiPublicBaseUrl}{result.QrCodeImagePath}";
 
                 ModelState.Clear();
                 return View("Index", new CreateShortUrlViewModel());
@@ -78,16 +77,14 @@ namespace UrlShortener.MVC.Controllers
 
                 if (!string.IsNullOrWhiteSpace(ex.Message))
                 {
-                    var lowerMessage = ex.Message.ToLower();
+                    var lowerMessage = ex.Message.ToLowerInvariant();
 
                     if (lowerMessage.Contains("invalid url"))
-                    {
                         ViewBag.Error = "Invalid URL. Please enter a correct link starting with http:// or https://";
-                    }
                     else if (lowerMessage.Contains("original url cannot be empty"))
-                    {
                         ViewBag.Error = "Please enter a URL before shortening.";
-                    }
+                    else if (lowerMessage.Contains("rate limit") || lowerMessage.Contains("429"))
+                        ViewBag.Error = "You are sending requests too quickly. Please wait a moment and try again.";
                 }
 
                 return View("Index", model);

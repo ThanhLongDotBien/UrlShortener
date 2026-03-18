@@ -1,11 +1,37 @@
 services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: urlshortener-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "YourStrong@Pass123"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+
+  redis:
+    image: redis:7-alpine
+    container_name: urlshortener-redis
+    ports:
+      - "6379:6379"
+
   api:
     build:
       context: .
       dockerfile: UrlShortener.API/Dockerfile
     container_name: urlshortener-api
     ports:
-      - "8080:8080"
+      - "8088:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=UrlShortenerDb;User Id=sa;Password=YourStrong@Pass123;TrustServerCertificate=True;Encrypt=False;MultipleActiveResultSets=true;"
+      ConnectionStrings__Redis: "redis:6379"
+      AppSettings__BaseUrl: " https://noncortically-chalcographical-alvina.ngrok-free.dev"
+    depends_on:
+      - sqlserver
+      - redis
 
   mvc:
     build:
@@ -13,6 +39,18 @@ services:
       dockerfile: UrlShortener.MVC/Dockerfile
     container_name: urlshortener-mvc
     ports:
-      - "8081:8080"
+      - "8089:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=UrlShortenerDb;User Id=sa;Password=YourStrong@Pass123;TrustServerCertificate=True;Encrypt=False;MultipleActiveResultSets=true;"
+      ConnectionStrings__Redis: "redis:6379"
+      ApiSettings__InternalBaseUrl: "http://api:8080/"
+      ApiSettings__PublicBaseUrl: " https://noncortically-chalcographical-alvina.ngrok-free.dev/"
     depends_on:
+      - sqlserver
+      - redis
       - api
+
+volumes:
+  sql_data:

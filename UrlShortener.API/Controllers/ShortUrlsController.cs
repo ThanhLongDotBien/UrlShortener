@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Mvc;
 using UrlShortener.Common.DTOs;
 using UrlShortener.Services.Interfaces;
 
@@ -16,6 +17,7 @@ namespace UrlShortener.API.Controllers
         }
 
         [HttpPost]
+        [EnableRateLimiting("create-shorturl")]
         public async Task<IActionResult> Create(CreateShortUrlRequestDto request)
         {
             try
@@ -30,6 +32,7 @@ namespace UrlShortener.API.Controllers
         }
 
         [HttpGet("/api/shorturls/{code}")]
+        [EnableRateLimiting("redirect")]
         public async Task<IActionResult> GetByCode(string code)
         {
             var result = await _shortUrlService.GetByCodeAsync(code);
@@ -41,6 +44,7 @@ namespace UrlShortener.API.Controllers
         }
 
         [HttpGet("/{code}")]
+        [EnableRateLimiting("redirect")]
         public async Task<IActionResult> RedirectToOriginal(string code)
         {
             var originalUrl = await _shortUrlService.GetOriginalUrlAsync(code);
