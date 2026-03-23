@@ -143,9 +143,16 @@ namespace UrlShortener.Services.Implementations
 
         private async Task CacheShortUrlAsync(ShortUrlResponseDto dto)
         {
-            var json = JsonSerializer.Serialize(dto);
-            await _cache.SetStringAsync(GetShortUrlCacheKey(dto.Code), json, BuildCacheOptions());
-            await _cache.SetStringAsync(GetOriginalUrlCacheKey(dto.Code), dto.OriginalUrl, BuildCacheOptions());
+            try
+            {
+                var json = JsonSerializer.Serialize(dto);
+                await _cache.SetStringAsync(GetShortUrlCacheKey(dto.Code), json, BuildCacheOptions());
+                await _cache.SetStringAsync(GetOriginalUrlCacheKey(dto.Code), dto.OriginalUrl, BuildCacheOptions());
+            }
+            catch
+            {
+                // bỏ qua lỗi cache để chức năng chính vẫn chạy
+            }
         }
 
         private static string GetShortUrlCacheKey(string code) => $"shorturl:dto:{code}";

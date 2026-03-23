@@ -114,7 +114,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+var runningInDocker = builder.Configuration.GetValue<bool>("RunningInDocker");
+if (!runningInDocker)
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseStaticFiles();
 app.UseRateLimiter();
 app.UseAuthentication();
